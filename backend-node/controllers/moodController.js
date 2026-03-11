@@ -20,8 +20,9 @@ const createMood = async (req, res) => {
         return res.status(201).json({ message: "Mood Saved.", data: newEntry, feedback: employee_feedback })
     } catch (error) {
         // sending the error response to the client
-        console.error(error)
-        return res.status(400).json({ message: "AI analysis Failed. Please try again later" })
+        console.error("Error in createMood:", error.response?.data || error.message);
+        const errorMessage = error.response ? "AI Engine Error: " + (error.response.data?.detail || error.message) : "AI analysis Failed or Database Error. Please try again later";
+        return res.status(400).json({ message: errorMessage, error: error.message })
     }
 }
 export default createMood;
