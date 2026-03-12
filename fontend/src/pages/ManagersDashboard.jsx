@@ -186,34 +186,36 @@ const ManagersDashboard = () => {
   ];
 
   return (
-    <div className="flex flex-col md:flex-row h-full w-full bg-[#212121] overflow-hidden">
+    <div className="flex flex-col md:flex-row h-[calc(100vh-80px)] w-full bg-[#212121] overflow-hidden">
       {/* Sidebar */}
       <div
-        className={`fixed md:relative inset-y-0 left-0 w-72 h-full bg-transparent transition-transform duration-300 ease-in-out z-30 md:translate-x-0 flex-shrink-0`}
+        className={`fixed md:sticky top-0 left-0 w-72 h-full bg-[#1a1a1a]/50 md:bg-transparent transition-transform duration-300 ease-in-out z-30 md:translate-x-0 flex-shrink-0 p-4 border-r border-[#2F2F2F]/30`}
       >
         <div className="mb-8 hidden md:block">
           <h2 className="text-white font-bold text-xl px-4">Manager Panel</h2>
         </div>
-        {menuItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => {
-              setActiveTab(item.id);
-            }}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 w-full text-left ${
-              activeTab === item.id
-                ? "bg-[#2F2F2F] text-white shadow-md"
-                : "text-gray-400 hover:bg-[#252525] hover:text-gray-200"
-            }`}
-          >
-            <item.icon size={20} />
-            <span className="font-medium">{item.label}</span>
-          </button>
-        ))}
+        <div className="space-y-2">
+          {menuItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => {
+                setActiveTab(item.id);
+              }}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 w-full text-left ${
+                activeTab === item.id
+                  ? "bg-[#2F2F2F] text-white shadow-md border border-[#3E3E3E]"
+                  : "text-gray-400 hover:bg-[#252525] hover:text-gray-200"
+              }`}
+            >
+              <item.icon size={20} />
+              <span className="font-medium">{item.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-0 relative overflow-hidden">
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-[#212121]">
         {loading && (
           <div className="absolute inset-0 bg-[#212121]/80 z-10 flex items-center justify-center">
             <span className="text-xl text-gray-300 animate-pulse">
@@ -224,7 +226,7 @@ const ManagersDashboard = () => {
 
         {/* User Query View */}
         {activeTab === "moods" && (
-          <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
+          <div className="flex-1 p-4 md:p-8 space-y-6">
             <h1 className="text-xl md:text-2xl font-bold text-[#ECECEC] mb-4 md:mb-6">
               User Queries
             </h1>
@@ -281,7 +283,7 @@ const ManagersDashboard = () => {
 
         {/* Analytics View */}
         {activeTab === "analytics" && analytics && (
-          <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8">
+          <div className="flex-1 p-4 md:p-8 space-y-8">
             <h1 className="text-xl md:text-2xl font-bold text-[#ECECEC] mb-4 md:mb-6">
               Department Analytics
             </h1>
@@ -390,7 +392,7 @@ const ManagersDashboard = () => {
 
         {/* Summary View */}
         {activeTab === "summary" && (
-          <div className="flex-1 flex flex-col gap-6 p-4 md:p-8 min-h-0 overflow-y-auto md:overflow-hidden">
+          <div className="flex-1 flex flex-col gap-6 p-4 md:p-8 min-h-0">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <h1 className="text-xl md:text-2xl font-bold text-[#ECECEC]">
                 Insights & Summary

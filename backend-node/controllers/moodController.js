@@ -1,29 +1,69 @@
 import { Mood } from "../models/Mood.js";
 import axios from 'axios';
 const createMood = async (req, res) => {
-    // here we are getting the data from the requst body
-    const { entry_text, department } = req.body
-    try {
-        // Normalize the AI_ENGINE_URL to prevent double slashes (e.g., //analyze)
-        const aiBaseUrl = process.env.AI_ENGINE_URL.replace(/\/+$/, '');
-        // calling the ai server 
-        const ai_response = await axios.post(`${aiBaseUrl}/analyze`, { text: entry_text })
-        
-        // const aiData = JSON.parse(ai_response.data.message)
-        const aiData = ai_response.data.message;
+    const { entry_text, department } = req.body;
+    const userId = req.user.id;
 
-        const aiData_parsing = JSON.parse(aiData)
-        // creating the new entry in the database
-        const employee_feedback = aiData_parsing["Employee_Response"]
-        const newEntry = new Mood({ entry_text, sentiment_score: aiData_parsing["Sentiment_Score"], category_tags: aiData_parsing["Category_Tags"], urgency_level: aiData_parsing["Urgency_Level"], reasoning: aiData_parsing["Reasoning"], department: department, org_id: req.user.org_id, user_id: req.user.id })
-        // saving the new entry in the database
-        await newEntry.save()
-        // sending the response to the client
-        return res.status(201).json({ message: "Mood Saved.", data: newEntry, feedback: employee_feedback })
+    try {
+        // Daily Limit Check: Count entries from today for this user
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        
+        const endOfDay = new Date();
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const todayEntriesCount = await Mood.countDocuments({
+            user_id: userId,
+            createdAt: { $gte: startOfDay, $lte: endOfDay }
+        });
+
+        if (todayEntriesCount >= 5) {
+            return res.status(429).json({ 
+                message: "Daily limit reached. You can only submit 5 entries per day to ensure mindful reflection." 
+            });
+        }
+
+        // Normalize the AI_ENGINE_URL to prevent double slashes
+        const aiBaseUrl = process.env.AI_ENGINE_URL.replace(/\/+$/, '');
+        
+        // Calling the AI server 
+        let ai_response;
+        try {
+            ai_response = await axios.post(`${aiBaseUrl}/analyze`, { text: entry_text });
+        } catch (aiErr) {
+            const status = aiErr.response?.status || 500;
+            const detail = aiErr.response?.data?.detail || aiErr.message;
+            
+            if (status === 503) {
+                return res.status(503).json({ message: "The AI is currently busy due to high demand. Please try again in a few seconds." });
+            }
+            throw new Error(`AI Engine Error (${status}): ${detail}`);
+        }
+        
+        const aiData = ai_response.data.message;
+        const aiData_parsing = JSON.parse(aiData);
+        
+        // Creating the new entry
+        const employee_feedback = aiData_parsing["Employee_Response"];
+        const newEntry = new Mood({ 
+            entry_text, 
+            sentiment_score: aiData_parsing["Sentiment_Score"], 
+            category_tags: aiData_parsing["Category_Tags"], 
+            urgency_level: aiData_parsing["Urgency_Level"], 
+            reasoning: aiData_parsing["Reasoning"], 
+            department: department, 
+            org_id: req.user.org_id, 
+            user_id: userId 
+        });
+
+        await newEntry.save();
+        return res.status(201).json({ message: "Mood Saved.", data: newEntry, feedback: employee_feedback });
+
     } catch (error) {
-        // Log to server only in dev or use a proper logger
-        const errorMessage = error.response ? "AI Engine Error: " + (error.response.data?.detail || error.message) : "AI analysis Failed or Database Error. Please try again later";
-        return res.status(400).json({ message: errorMessage })
+        console.error("Mood Creation Error:", error.message);
+        return res.status(error.status || 400).json({ 
+            message: error.message || "An unexpected error occurred. Please try again." 
+        });
     }
-}
+};
 export default createMood;

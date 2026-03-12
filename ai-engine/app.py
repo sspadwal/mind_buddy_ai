@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 import uvicorn
 from pydantic import BaseModel
 from google import genai
@@ -68,8 +68,10 @@ async def demo(data: FeedbackRequest):
         return {"message": response.text}
     except Exception as e:
         import logging
-        logging.error(e)
-        return {"error": str(e), "message": "AI analysis failed due to an internal error."}
+        logging.error(f"GenAI Error: {e}")
+        # Return 503 if it looks like a service overload, otherwise 500
+        status_code = 503 if "high demand" in str(e).lower() or "unavailable" in str(e).lower() else 500
+        raise HTTPException(status_code=status_code, detail=str(e))
 
 
 class SummaryRequest(BaseModel):

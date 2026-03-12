@@ -15,7 +15,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="relative flex justify-between items-center px-4 md:px-6 py-4 w-full bg-[#1a1a1a] md:bg-transparent z-40">
+    <nav className="sticky top-0 flex justify-between items-center px-4 md:px-6 py-4 w-full bg-[#1a1a1a] md:bg-transparent z-40">
       <div className="flex items-center gap-2">
         <NavLink
           to="/"

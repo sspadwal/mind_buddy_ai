@@ -28,6 +28,7 @@ const EmployeeDashboard = ({ children }) => {
   const [history, setHistory] = useState([]);
   const [showHistoryList, setShowHistoryList] = useState(false);
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
 
@@ -42,6 +43,8 @@ const EmployeeDashboard = ({ children }) => {
 
     try {
       setLoading(true);
+      setMessage("");
+      setError("");
       const token = localStorage.getItem("token");
 
       const res = await axios.post(
@@ -63,7 +66,13 @@ const EmployeeDashboard = ({ children }) => {
         setMessage("");
       }, 30000);
     } catch (err) {
-      // Error handled by UI
+      const errorMsg =
+        err.response?.data?.message || "Something went wrong. Please try again.";
+      setError(errorMsg);
+
+      timerRef.current = setTimeout(() => {
+        setError("");
+      }, 8000);
     } finally {
       setLoading(false);
     }
@@ -163,8 +172,16 @@ const EmployeeDashboard = ({ children }) => {
 
               {message && (
                 <div className="w-full animate-in fade-in slide-in-from-bottom-4 mt-8">
-                  <div className="p-6 bg-[#2F2F2F] rounded-2xl text-[#ECECEC] border border-[#3E3E3E] text-base">
+                  <div className="p-6 bg-[#2F2F2F] rounded-2xl text-[#ECECEC] border border-[#3E3E3E] text-base shadow-xl">
                     {message}
+                  </div>
+                </div>
+              )}
+
+              {error && (
+                <div className="w-full animate-in fade-in slide-in-from-bottom-4 mt-8">
+                  <div className="p-4 bg-red-500/10 rounded-xl text-red-500 border border-red-500/20 text-sm text-center">
+                    {error}
                   </div>
                 </div>
               )}
@@ -181,9 +198,9 @@ const EmployeeDashboard = ({ children }) => {
 
                   <button
                     type="submit"
-                    disabled={!queryValue?.trim() || isSubmitting}
+                    disabled={!queryValue?.trim() || isSubmitting || loading}
                     className={`absolute right-3 p-2 rounded-xl transition-all duration-200 ${
-                      !queryValue?.trim() || isSubmitting
+                      !queryValue?.trim() || isSubmitting || loading
                         ? "bg-[#3E3E3E] text-gray-500 cursor-not-allowed"
                         : "bg-white text-black hover:bg-gray-200"
                     }`}

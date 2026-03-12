@@ -7,7 +7,10 @@ const moodHistory = async (req, res) => {
     try {
         const role = req.user.role;
         if (role === "admin") {
-            moods = await Mood.find({ org_id: req.user.org_id })
+            moods = await Mood.find({ 
+                org_id: req.user.org_id,
+                department: req.user.department 
+            })
         }
         else if (role === "employee") {
             moods = await Mood.find({ user_id: req.user.id })
